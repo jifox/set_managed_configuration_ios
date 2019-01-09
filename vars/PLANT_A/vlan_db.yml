@@ -1,0 +1,65 @@
+---
+
+###
+# VLAN definitions for PLANT_A
+#
+# vlan_db:
+#   vlan_defines:
+#     vlan_name      : Unique VLAN name
+#     vlan_dhcp_snoop: true       ip dhcp snooping will be enabled for that vlan
+#                      false <--  dhcp snooping will not be enabled for the vlan
+#
+# vlan_groups     : Groups VLAN ids for switches on different locations
+#
+#
+vlan_db:
+  vlan_db_version: "1.0"
+
+  vlan_groups:
+    - atvi        # Vienna  PLANT_A
+    - atvidc      #   dc == Datacenter Switches
+    - atvidg      #   dg == ROUTER - Default Gateway
+    - atvidz      #   dz == DMZ / WAN Switches
+    - atvifw      #   fw == Switches where firewall is connected to
+
+  vlan_defines:
+    "1":
+      vlan_name: "DEFAULT_VLAN"
+      vlan_deploy: [atvi]
+    "2":
+      vlan_name: "SRV"
+      vlan_deploy: [atvidg]
+      vlan_dhcp_snoop: true
+    "4":
+      vlan_name: "VMOTION"
+      vlan_deploy: [atvidg]
+      vlan_dhcp_snoop: true
+    "6":
+      vlan_name: "OBM-LOM"
+      vlan_deploy: [atvidg]
+      vlan_dhcp_snoop: true
+    "10":
+      vlan_name: "CLIENT"
+      vlan_deploy: [atvi]
+    "12":
+      vlan_name: "CLIENT-IT"
+      vlan_deploy: [atvi]
+    "40":
+      vlan_name: "VOIP"
+      vlan_deploy: [atvi]
+      vlan_dhcp_snoop: true
+    "50":
+      vlan_name: "WEBCAM"
+      vlan_deploy: [atvi]
+      vlan_dhcp_snoop: true
+    "60":
+      vlan_name: "GUEST-WLAN"
+      vlan_deploy: [atvi]
+      vlan_dhcp_snoop: true
+    "62":
+      vlan_name: "WLAN"
+      vlan_deploy: [atvi]
+      vlan_dhcp_snoop: true
+    "100":
+      vlan_name: "MGMT-VLAN"
+      vlan_deploy: [atvi]

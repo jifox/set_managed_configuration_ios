@@ -1,0 +1,8 @@
+{% for vl in device_vlans %}
+{%   set vldata=device_vlans[vl] %}
+{%   if vl != "1" %}
+vlan {{ vl }}
+ name {{ vldata.vlan_name }}
+!
+{%   endif %}
+{% endfor %}

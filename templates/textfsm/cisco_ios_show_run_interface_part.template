@@ -1,0 +1,29 @@
+Value Required interface_name (\w+.+)
+Value auth_prio (.+)
+Value description (.+)
+Value flow_monitor (\w+)
+Value flow_monitor_mode (\w+)
+Value ip_address (\d+\.\d+\.\d+\.\d+)
+Value ip_netmask (\d+\.\d+\.\d+\.\d+)
+Value port_channel (\d+)
+Value port_channel_mode (\w+)
+Value port_mode (\w+)
+Value stp_mode (\.+)
+Value vlan_access (\d+)
+Value vlan_voice (\d+)
+Value power_inline (\.+)
+
+Start
+  ^interface\s+${interface_name}$$ -> Continue
+  ^interface\s+Port-channel${port_channel}$$
+  ^\s+switchport\s+mode\s+${port_mode}$$
+  ^\s+description\s+${description}$$
+  ^\s+power\s+inline\s+${power_inline}$$
+  ^\s+switchport\s+access\s+vlan\s+${vlan_access}$$
+  ^\s+switchport\s+voice\s+vlan\s+${vlan_voice}$$
+  ^\s+spanning-tree\s+${stp_mode}$$
+  ^\s+channel-group\s+${port_channel}\s+mode\s+${port_channel_mode}$$
+  ^\s+ip\s+address\s+${ip_address}\s+${ip_netmask}$$
+  ^\s+ip\s+flow\s+monitor\s+${flow_monitor}\s+${flow_monitor_mode}$$
+  ^\s+authentication\s+priority\s+${auth_prio}$$
+  ^!$$ -> Record

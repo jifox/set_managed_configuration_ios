@@ -1,0 +1,90 @@
+---
+#
+# file: inc_template.yml
+#
+# is used to automatically select the most specific template with given name
+#
+#  - name: Generate
+#    include_tasks: "{{ include_dir }}/inc_template.yml"
+#    vars:
+#      template_name: "template_name"  # filename with extension  e.g.:  'config_vlans.j2'
+#      template_dest: "{{ config_dir }}\output.txt"    # [path]filename of output_file
+#      show_result: true  # (optional) [false <-- |true] display generated file if template changed.
+#      # template_suppress_changed:  true # (optional)  when set to true no change will be reported to ansible
+#      # template_dir:   base directory where templates are searched (usually set in group_vars)
+#    check_mode: false
+#    changed_when: false
+#    delegate_to: localhost
+#
+# Result:
+#    template_result.changed   reflect the template generation result
+#
+
+- assert:
+    msg: "Missing Parameter: template_dir, template_name or template_dest is not defined!"
+    that:
+      - template_name is defined
+      - template_dest is defined
+      - template_dir is defined
+  delegate_to: localhost
+
+# - debug:
+#     msg: |
+#       ------------ inc_template parameters -----------
+#       template_name: "{{ template_name }}"
+#       template_dest: "{{ template_dest }}"
+#       show_result: "{{ 'None' if show_result is not defined else show_result }}"
+#       template_suppress_changed: "{{ 'None' if template_suppress_changed is not defined else template_suppress_changed }}"
+#   delegate_to: localhost
+#   changed_when: false
+#   check_mode: false
+#   tags: [print_action]
+
+- template:
+    src: "{{ template_file }}"
+    dest: "{{ template_dest }}"
+    lstrip_blocks: true
+  with_first_found:
+    - files:
+        - "{{ template_dir }}/{{ ansible_network_os | default('unknown_os') }}/{{ config_group }}/{{ template_name }}"
+        - "{{ template_dir }}/{{ ansible_network_os | default('unknown_os') }}/{{ template_name }}"
+        - "{{ template_dir }}/{{ template_name }}"
+      skip: true
+  loop_control:
+    loop_var: template_file
+  delegate_to: localhost
+  register: template_result
+  changed_when: template_result.changed and (template_suppress_changed is not defined or not template_suppress_changed)
+  ignore_errors: true
+
+# - debug:
+#     msg: |
+#       ------------ inc_template result -----------
+#       template_result: "{{ template_result | to_nice_yaml }}"
+#   delegate_to: localhost
+#   changed_when: false
+#   check_mode: false
+#   tags: [print_action]
+
+- name: Display template failed message
+  assert:
+    msg: "Template failed with Error: {{ template_result | to_nice_yaml }}"
+    that:
+      - template_result.failed is not defined or not template_result.failed
+  delegate_to: localhost
+
+- assert:
+    msg: "Missing Template: {{ template_name }}"
+    that:
+      - template_result.skipped is not defined or not template_result.skipped
+  delegate_to: localhost
+
+
+- name: Show generated template output filename
+  debug:
+    msg: "Changed: {{ template_dest }}"
+  delegate_to: localhost
+  when:
+    - template_result.changed
+    - show_result is defined and show_result
+  tags: [print_action]

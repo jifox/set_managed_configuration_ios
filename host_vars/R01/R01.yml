@@ -1,0 +1,19 @@
+---
+# file:  ./host_vars/R01/R01.yml
+#
+# LAB - WS-C3560CX-8XPD-S  15.2(4)E5  C3560CX-UNIVERSALK9-M
+#
+snmp_location: LAB PLANT_A
+banner_remarks: "  Rack01"
+
+switch_location_group: "PLANT_A"
+
+
+# Used to determine the device vlans (vars/vlan_db.vml)
+switch_location: [atvi, atvidc, atvifw]
+
+# Used to select syntax-variants for templates
+config_group: 'C3560'
+
+# Optional to define this device as being the default gateway
+# is_default_gateway: true

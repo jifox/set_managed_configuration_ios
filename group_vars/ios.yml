@@ -1,0 +1,24 @@
+---
+ansible_connection: network_cli
+ansible_network_os: ios
+ansible_become: yes
+ansible_become_method: enable
+gather_facts: no
+
+
+# Provider record for napalm-ansible modules
+provider_napalm:
+  hostname: "{{ ansible_host }}"
+  username: "{{ ansible_user }}"
+  dev_os: "{{ ansible_network_os }}"
+  password: "{{ ansible_ssh_pass }}"
+
+
+# Enables the router to act as a valid time source to which network peers can synchronize
+clock_calendar: clock calendar-valid
+
+# Client Switchport names
+client_ports_regex: "GigabitEthernet\\d+\\/0\\/\\d+"
+
+ios_clock_timezone: clock timezone MES 1 0
+ios_clock_summertime: clock summer-time MES recurring last Sun Mar 2:00 last Sun Oct 2:00

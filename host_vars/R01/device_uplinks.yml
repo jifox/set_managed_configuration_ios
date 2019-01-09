@@ -1,0 +1,48 @@
+---
+#
+# file: host_vars/R01/device_uplinks.yml
+#
+# Don't modify: Automatically generated files will be overwritten
+#               see: vars/PLANT_A/uplinks_db.yml
+#               playbook: gen_device_specific_vars_from_fabric.yml
+#
+
+device_uplinks:
+
+  channel_uplinks:
+    "1":
+      device_remote: "VMWARE01"
+      interface_local: ['Te1/0/1', 'Te1/0/2']
+      interface_remote: ['Po1.1', 'Po3.1']
+      sfp_type: ['10G-SR', '10G-SR']
+      native_vlan: "10"
+      root_guard: true
+      allowed_vlans: "1,4,6,40,100"
+      lldp_ignore: false
+      description: "Po1 (20G) to ESX01 Po1"
+      channel_linktype: "on"
+      channel_nr_local: "1"
+      channel_nr_remote: "1"
+
+  trunk_uplinks:
+    "1":
+      device_remote: "FIREWALL"
+      interface_local: ['Te1/0/7']
+      interface_remote: ['et3']
+      sfp_type: ['10G-SR']
+      native_vlan: "100"
+      root_guard: false
+      lldp_ignore: true
+      allowed_vlans: "1-3,5-4094"
+      description: "TRUNK to FIREWALL"
+    "2":
+      device_remote: "WLC01"
+      interface_local: ['Te1/0/8']
+      interface_remote: ['Et0']
+      sfp_type: ['1G-T']
+      native_vlan: "10"
+      root_guard: false
+      allowed_vlans: "10,20,40,50,60,62,100"
+      description: "TRUNK R01 to WLC01"
+
+  access_uplinks: []

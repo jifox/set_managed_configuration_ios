@@ -1,0 +1,31 @@
+---
+# file:           host_vars/ATKPACSE101/ATKPACSE101/conf_client_ports.yml
+#
+# Switch:         R01
+#                 Rack-01
+#
+# conf_client_ports: Contains the client switchport definition data.
+#     port_type:   ptype_vlan   - switchport mode access
+#                                 access vlan_id=switchport_default_vlan_id if vlan_id is not defined
+#                                 voice  vlan_id=switchport_voice_vlan_id
+#                  ptype_vlnv   - switchport mode access   (no voip)
+#                                 access vlan_id=switchport_default_vlan_id if vlan_id is not defined
+#                  ptype_dot1x  - default 802-1x configuration
+#                                 voice  vlan_id=switchport_voice_vlan_id
+#                  ptype_ignore - do not touch the configuration
+#
+#     vlan_id:     ""           - default vlan
+#                  vlan_id      - non standard vlan_id for access port
+#
+#     is_enabled:  true         - administrative up   (no shutdown)
+#                  false        - administrative down (shutdown)
+#
+#     description: current interface description or standard is none is set
+#
+conf_client_ports:
+  GigabitEthernet1/0/1: [{ port_type: ptype_vlan, vlan_id: "", is_enabled: true, description: "Default Switchport VOIP" }]
+  GigabitEthernet1/0/2: [{ port_type: ptype_vlnv, vlan_id: "40", is_enabled: true, description: "Door-Lock no Voip" }]
+  GigabitEthernet1/0/3: [{ port_type: ptype_dot1x, vlan_id: "", is_enabled: true, description: "802.1x Switchport VOIP" }]
+  GigabitEthernet1/0/4: [{ port_type: ptype_vlan, vlan_id: "", is_enabled: true, description: "" }]
+  GigabitEthernet1/0/5: [{ port_type: ptype_vlan, vlan_id: "", is_enabled: true, description: "" }]
+  GigabitEthernet1/0/6: [{ port_type: ptype_ignore, vlan_id: "", is_enabled: true, description: "" }]

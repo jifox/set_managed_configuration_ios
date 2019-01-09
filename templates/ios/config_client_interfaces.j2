@@ -1,0 +1,111 @@
+{% for intf in conf_client_ports %}
+{%   set port_type=conf_client_ports[intf] | map(attribute='port_type') | first  %}
+{%   set description=conf_client_ports[intf] | map(attribute='description') | first  %}
+{%   if description == '' %}
+{%     set flg = [] %}
+{%     if port_type in ['ptype_vlnp', 'ptype_vlnpv', 'ptype_dot1xnp'] %}
+{%       set flg = flg + ['No POE'] %}
+{%     endif %}
+{%     if port_type in ['ptype_vlnv', 'ptype_vlnpv'] %}
+{%       set flg = flg + ['No VOICE'] %}
+{%     endif %}
+{%     if flg != [] %}
+{%       set description = flg | join(' ') %}
+{%     endif %}
+{%   endif %}
+{%   set vlan_id=conf_client_ports[intf] | map(attribute='vlan_id') | first %}
+{%   set port_enabled=conf_client_ports[intf] | map(attribute='is_enabled') | first %}
+{%   if textfsm_show_run_interfaces_part is defined %}
+{%     set switch_intf_data = textfsm_show_run_interfaces_part | selectattr('interface_name', 'equalto', intf) | first %}
+{%     set desc_switch = switch_intf_data | map(attribute='description') | first %}
+{%     set power_switch = switch_intf_data | map(attribute='power_inline') | first %}
+{%   endif %}
+{#   INTERFACE CONFIG  #}
+{%   if port_type != 'ptype_ignore' %}
+interface {{ intf }}
+{%       if description != '' %}
+ description {{ description }}
+{%       else %}
+{%         if desc_switch is defined and desc_switch != '' %}
+ no description
+{%         endif %}
+{%       endif %}
+{%     if port_type in ['ptype_vlan', 'ptype_vlnp', 'ptype_vlnpv', 'ptype_vlnv'] %}
+{# STANDARD SWITCHPORT #}
+ switchport mode access
+{%       if vlan_id != '' %}
+ switchport access vlan {{ vlan_id }}
+{%       endif %}
+{%       if port_type in ['ptype_vlan', 'ptype_vlnp']  %}
+ switchport voice vlan {{ switchport_voice_vlan_id }}
+{%       else %}
+{%         if textfsm_show_run_interfaces_part is defined %}
+{%           set vlan_voip=textfsm_show_run_interfaces_part | selectattr('interface_name', 'equalto', intf) | map(attribute='vlan_voice') | first %}
+{%           if vlan_voip != '' %}
+ no switchport voice vlan {{ switchport_voice_vlan_id }}
+{%           endif %}
+{%         endif %}
+{%       endif %}
+{% if not config_group in ['C3560'] %}
+ ip flow monitor IPv4_STEALTHWATCH_NETFLOW input
+{% else %}
+ ip flow monitor IPv4_STEALTHWATCH_NETFLOW sampler STEALTHWATCH_NETFLOW_SAMPLER input
+{% endif %}
+{%       if port_enabled != true %}
+ shutdown
+{%       endif%}
+{%       if port_type in ['ptype_vlnp', 'ptype_vlnpv']  %}
+ power inline never
+{%       endif%}
+ switchport nonegotiate
+ spanning-tree portfast
+ storm-control multicast level 5.00
+ storm-control broadcast level 5.00
+ storm-control action trap
+ storm-control action shutdown
+ spanning-tree guard root
+ ip arp inspection limit rate 400 burst interval 3
+!
+{%     elif port_type in ['ptype_dot1x', 'ptype_dot1xnp'] %}
+{# STANDARD 802.1x PORT #}
+ switchport mode access
+{%       if vlan_id != '' %}
+ switchport access vlan {{ vlan_id }}
+{%       endif %}
+ switchport voice vlan {{ switchport_voice_vlan_id }}
+ switchport nonegotiate
+{% if not config_group in ['C3560'] %}
+ ip flow monitor IPv4_STEALTHWATCH_NETFLOW input
+{% else %}
+ ip flow monitor IPv4_STEALTHWATCH_NETFLOW sampler STEALTHWATCH_NETFLOW_SAMPLER input
+{% endif %}
+ authentication control-direction in
+ authentication event fail action next-method
+ authentication event server alive action reinitialize
+ authentication host-mode multi-domain
+ authentication order mab dot1x
+ authentication priority dot1x mab
+ authentication port-control auto
+ authentication periodic
+ authentication timer reauthenticate server
+ authentication timer inactivity 200
+ mab
+ dot1x pae authenticator
+ dot1x timeout tx-period 5
+{%       if port_enabled != true %}
+ shutdown
+{%       endif %}
+{%       if port_type in ['ptype_dot1xnp']  %}
+ power inline never
+{%       endif%}
+ spanning-tree portfast
+ storm-control multicast level 5.00
+ storm-control broadcast level 5.00
+ storm-control action trap
+ storm-control action shutdown
+ spanning-tree guard root
+ ip arp inspection limit rate 400 burst interval 3
+!
+{%     endif %}
+{%   endif %}
+{% endfor %}

@@ -1,0 +1,19 @@
+---
+# file: include/inc_validate_directory_already_exists.yml
+#
+# validate that the directory given in directory_to_validate exists
+#
+
+- stat:
+    path: "{{ dir_exist }}"
+  register: stat_result
+  delegate_to: localhost
+
+- assert:
+    msg: |
+        ERROR: Directory missing {{ dir_exist }}
+        stat_result: {{ stat_result | to_nice_yaml }}
+    that:
+      - stat_result.stat.isdir is defined and stat_result.stat.isdir
+  delegate_to: localhost
+

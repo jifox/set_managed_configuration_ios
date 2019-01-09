@@ -1,0 +1,109 @@
+---
+#
+# file: group_vars/all.yml
+#
+
+# Python Version used for ansible and installed modules like napalm.
+ansible_python_interpreter: /usr/bin/python3
+
+##############################################################################
+# Common directories for all playbooks
+##############################################################################
+
+# Base directory where local ansible.cfg is located
+# (git repository master branch)
+base_dir: "{{ inventory_dir }}"
+
+# Directory where all the backups are stored
+backup_dir: /home/backups
+
+# backup_files_group is used to specify a user-group that will have access
+# to backup files.
+# Name of the group that should own the file/directory, as would be
+# fed to chown user:backup_files_group'.
+# If backup_files_group == "" the group of the backup files will not be
+# altered.
+backup_files_group: "backupgroup"
+
+# Directory where generated configuration files will be stored
+config_dir: "{{ base_dir }}/configs/{{ inventory_hostname }}"
+
+# Directory where additional variables are stored
+encrypted_vault_file: "~/vault_vars.yml"
+
+# Directory for temporary files
+host_tmpdir: "{{ base_dir }}/compiled/{{ inventory_hostname}}"
+
+# Directory for host_vars (generated)-files
+host_vars_dir: "{{ base_dir }}/host_vars/{{ inventory_hostname}}"
+
+# Directory for ansible task include files inc_*.yml
+include_dir: "{{ base_dir }}/include"
+
+# Output directory for reports
+report_dir: "{{ base_dir }}/reports"
+
+# Directory where Textfsm templates are stored
+template_dir: "{{ base_dir }}/templates"
+
+# Directory where Textfsm templates are stored
+textfsm_template_dir: "{{ base_dir }}/templates/textfsm"
+
+# Directory where snapshots are stored (inc_snapshot.yml)
+snapshot_dir: "~/snapshots{{ '/devel' if is_develop else '' }}"
+
+# Directory where additional variables are stored
+vars_dir: "{{ base_dir }}/vars"
+
+# Directory to publish html files to webserver. 'is_develop' is set in inventory file
+www_dir: "/var/www/html/{{'reports-devel' if is_develop == true else 'reports'}}"
+
+
+##############################################################################
+# Varables to initialize with default values
+##############################################################################
+
+# Used in Cisco ISE configuration template to allow radius authentication for ssh
+auth_ise_login: false
+
+# Used to further differentiate templates. See inc_template.yml
+config_group: 'NO_CONFIG_GROUP'
+
+# Values should be overwritten in group_vars if neccessary
+domain_name: lab.local
+
+# IP of Cisco Stealthwatch-Flow-collector. will be used to configure Stealthwatch
+# on switches. variable is defined in 'group_vars'
+#flowcollector_destination: 172.17.0.23
+
+# Define which logical group of locations are defined.
+# This groups will be used for e.g determine which vlans are defined at a
+# specific site.
+location_groups:
+  - PLANT_A:
+      location: Vienna
+
+
+# Name of Management Network. Used to communicte with management ip of devices
+# Usually defied at group vars but also on host vars if neccessary
+management_vrf_name: ""
+
+
+# Define ntp servers either as dns or ip. DNS name has to include a trailing '.'.
+# the IP Address of the time server. e.g ntp_server_dns: - "time.lab.local."
+#
+# The dns will have precedence over the 'ip'
+#  ntp_servers: [
+#       { dns: "ntp.example.com.", ip: "" },
+#       { dns: "", ip: "192.168.0.10" },
+#     ]
+ntp_servers: []
+
+# Mailserver
+smtp_servername: smtp.lab.local
+
+# # Virtual trunking domain name for location
+# vtp_domain: vtpdomainname
+
+# Path to {{ www_dir }} as URL
+www_report_url: "http://ansible.lab.local:8080/reports{{ '-devel' if is_develop else '' }}"

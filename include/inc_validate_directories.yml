@@ -1,0 +1,67 @@
+---
+#
+# file: include/inc_validate_directories.yml
+#
+# Include file to validate that all commonly used directories exist.
+#
+
+- name: Validate backup_dir
+  block:
+    - file:
+        path: "{{ backup_dir }}"
+        group: "{{backupgroup}}"
+        state: directory
+      run_once: true
+      when:
+        - backupgroup is defined
+        - backupgroup > ""
+    - file:
+        path: "{{ backup_dir }}"
+        state: directory
+      run_once: true
+      when:
+        - backupgroup is not defined or backupgroup == ""
+  become: true
+  check_mode: false
+  delegate_to: localhost
+
+
+- name: Ensure Empty temp directory exisit
+  block:
+    - file:
+        path: "{{ host_tmpdir }}"
+        state: absent
+      changed_when: false
+    - file:
+        path: "{{ host_tmpdir }}"
+        state: directory
+      changed_when: false
+  check_mode: false
+  delegate_to: localhost
+
+
+- name: Ensure Directories exits
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ config_dir }}"
+    - "{{ host_vars_dir }}"
+    - "{{ report_dir }}"
+    - "{{ snapshot_dir }}"
+    - "{{ vars_dir }}"
+  check_mode: false
+  delegate_to: localhost
+
+
+- name: Ensure that directory already exist
+  include_tasks: "{{ include_dir }}/inc_validate_directory_already_exists.yml"
+  loop:
+    - "{{ template_dir }}"
+    - "{{ textfsm_template_dir }}"
+    - "{{ www_dir }}"
+  loop_control:
+    loop_var: dir_exist
+  delegate_to: localhost
+  check_mode: false
+

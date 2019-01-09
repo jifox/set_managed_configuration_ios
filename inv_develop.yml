@@ -1,0 +1,24 @@
+---
+#
+# file: inv_develop.yml
+#
+# Inventory for development environment
+#
+all:
+  vars:
+    is_develop: true
+  children:
+
+    # All switches
+    switches:
+      # All switches
+
+      children:
+        ios:
+          # All IOS Switches (valid modules: ios_config, ios_facts, ios_vlan, ios_l2_interface)
+          children:
+            lab:
+              # All IOS Switches in LAB
+              hosts:
+                R01:
+                  ansible_host: 192.168.13.253

@@ -1,0 +1,12 @@
+---
+{% if conf_client_ports is defined %}
+managed_client_ports:
+{% for intf in conf_client_ports %}
+{%   set port_type=conf_client_ports[intf] | map(attribute='port_type') | first  %}
+{%   if port_type != 'ptype_ignore' %}
+  - {{ intf }}
+{%   endif %}
+{% endfor %}
+{% else %}
+managed_client_ports: []
+{% endif %}

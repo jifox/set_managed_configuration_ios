@@ -1,0 +1,21 @@
+---
+#
+# file: set_managed_configuration_ios.yml
+#
+- hosts: switches
+  become: false
+  gather_facts: false
+
+  tasks:
+
+    - include_tasks: "{{ include_dir }}/inc_set_managed_configuration_ios.yml"
+
+    - name: Display Commit Message
+      debug:
+        msg: "{{ msg_commited if do_commit is defined else msg_missing_commit }}"
+      vars:
+        msg_missing_commit: "Generated: {{ managed_config_dest }}\nThe decice is NOT COMPLIANT\nTo apply the changes to the device use commandline parameter -e do_commit=1"
+        msg_commited: "{{ 'The device is COMPLIANT.\nNo changes to commit!' if is_config_compliant else 'All Changes are COMMITTED!' }}"
+      run_once: true
+      delegate_to: localhost
+      tags: [print_action]

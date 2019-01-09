@@ -1,0 +1,38 @@
+---
+
+# Encrypted network_cli parameters
+ansible_user: "{{ vault_ansible_user }}"
+ansible_ssh_pass: "{{ vault_ansible_ssh_pass }}"
+
+snmpv3_auth_user: "{{ vault_snmpv3_auth_user }}"
+snmpv3_auth_pass: "{{ vault_snmpv3_auth_pass }}"
+snmpv3_priv_str: "{{ vault_snmpv3_priv_str }}"
+
+snmp_community: "{{ vault_snmp_community }}" # Read Only
+
+# Baseline Switch Operating Systems
+# Values from ios_facts
+#    "ansible_net_model": "C6824-X-LE-40G",
+#    "ansible_net_version": "15.4(1)SY4",
+#
+baseline_switch_data:
+  - { model: "C6824-X-LE-40G", os_version: "15.5(1)SY2", os_image_filename: "" }
+  - { model: "C9300-48P", os_version: "16.06.04a", os_image_filename: "cat9k_iosxe.16.06.04a.SPA.bin" }
+  - { model: "WS-C3560CX-8XPD-S", os_version: "15.2(4)E5", os_image_filename: "" }
+  - { model: "WS-C2960CX-8TC-L", os_version: "15.2(4)E6", os_image_filename: "" }
+
+
+# Define ntp servers either as dns or ip. DNS name has to include a trailing '.'.
+# the IP Address of the time server. e.g ntp_server_dns: - "time.lab.local."
+#
+# The dns will have precedence over the 'ip'
+#  ntp_servers: [
+#       { dns: "ntp.example.com.", ip: "" },
+#       { dns: "", ip: "192.168.0.10" },
+#     ]
+ntp_servers:
+  - { dns: "", ip: "192.168.13.1" }
+
+
+snmp_location: ""           # Switch location string
+banner_remarks: ""          # Additional remarks for banner (tasks/set_ios_banner.yml)

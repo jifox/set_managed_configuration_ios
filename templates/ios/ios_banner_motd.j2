@@ -1,0 +1,21 @@
+! ---------------------------------------------------------------------
+!   Hostname   : {{ ansible_net_hostname }}  {{ display_core }}
+!   IP Address : {{ ansible_host }}
+!   IOS Version: {{ ansible_net_version }}
+!   Location   : {{ snmp_location }}
+{% if banner_remarks is defined %}
+!                {{ banner_remarks }}
+!
+{% endif %}
+!                {{ vtp_domain_name | upper }}
+!
+!   Switch Informations:
+{% if ansible_net_stacked_models is defined %}
+{%   for sn in ansible_net_stacked_models %}
+!      {{ loop.index }} {{ ansible_net_stacked_models[loop.index0] }}     {{ ansible_net_stacked_serialnums[loop.index0] }}
+{%   endfor %}
+{% elif ansible_net_model is defined %}
+!      {{ ansible_net_model }}     {{ ansible_net_serialnum }}
+{% endif %}
+! ---------------------------------------------------------------------
+!
