@@ -2,7 +2,7 @@
 #
 # file: include/inc_validate_directories.yml
 #
-# Include file to validate that all commonly used directories exist.
+# Include file to ensure that all commonly used directories exist.
 #
 
 - name: Validate backup_dir

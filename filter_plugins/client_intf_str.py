@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Ansible Project
+# Copyright: (c) 2019, Josef Fuchs <josef.fuchs@j-fuchs.at>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
@@ -19,31 +19,52 @@ short_description: This filter allows to get Cisco IOS compatible interface name
 
 version_added: "2.7"
 description:
-  This filter is parsing a case insensitive string and returning the apropriate
-  interface name. The first two chars are used to determine the interface name.
 
-  String start with:
-    "et" - eth
-    "Fa" - FastEthernet
-    "Gi" - GigabitEthernet
-    "Te" - TenGigabitEthernet
-    "Tw" - TwentyfiveGigabitEthernet
-    "Fo" - FortyGigabitEthernet
-    "Hu" - HundredGigabitEthernet
-    "Lo" - Loopback
-    "Ma" - Management
-    "Po" - ""      # only port number will be set
+  client_intf_str:
+  =================
 
-For e.g.:
+    This filter is parsing a case insensitive string and returning the apropriate
+    interface name. The first two chars are used to determine the interface name.
 
-  - set_fact:
-      - intf: "{{ 'gi1/0/4' | client_intf_str }}
+    String start with:
+      "et" - eth
+      "Fa" - FastEthernet
+      "Gi" - GigabitEthernet
+      "Te" - TenGigabitEthernet
+      "Tw" - TwentyfiveGigabitEthernet
+      "Fo" - FortyGigabitEthernet
+      "Hu" - HundredGigabitEthernet
+      "Lo" - Loopback
+      "Ma" - Management
+      "Po" - ""      # only port number will be set
 
-  will return the dictionary intf:
+  For e.g.:
 
-  intf:
-    name: "GigabitEthernet"
-    number: "1/0/4"
+    - set_fact:
+        - intf: "{{ 'gi1/0/4' | client_intf_str }}
+
+    will return the dictionary intf:
+
+    intf:
+      name: "GigabitEthernet"
+      number: "1/0/4"
+
+  shorten_intf_str:
+  =================
+
+    This filter accepts a expanded interface name (GigabitEthernet1/0/4) or a short
+    interface name (Gi1/0/4) and returns always the short interface name.
+
+  For e.g.:
+
+    - set_fact:
+        - intf: "{{ 'TenGigabitEthernet1/1/4' | shorten_intf_str }}
+
+    will return the dictionary intf:
+
+    intf:
+      name: "Te"
+      number: "1/1/4"
 
 '''
 

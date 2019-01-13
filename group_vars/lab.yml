@@ -8,14 +8,14 @@ switch_location:
 flowcollector_destination: 172.17.0.23
 
 # Name of Management Network. Used to communicte with the switch and for services
-# ntp, radius, ... Usually defied at group vars but also on host vars if neccessary
+# ntp, radius, ... Usually defined at group vars but also on host vars if neccessary
 management_vrf_name: ""
 
 # VLAN_id that routes the management traffic. Will be used for Source statements.
 management_vlan_id: "10"
 management_vlan_net: 192.168.13.0 255.255.254.0
 management_vlan_net_acl: 192.168.13.0 0.0.0.255
-management_vlan_default_gateway: 192.168.13.0
+management_vlan_default_gateway: 192.168.13.1
 
 # Defaults for set_switchports.yml
 switchport_default_vlan_id: "10"

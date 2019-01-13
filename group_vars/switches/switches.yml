@@ -35,4 +35,4 @@ ntp_servers:
 
 
 snmp_location: ""           # Switch location string
-banner_remarks: ""          # Additional remarks for banner (tasks/set_ios_banner.yml)
+banner_remarks: ""          # Additional remarks for banner

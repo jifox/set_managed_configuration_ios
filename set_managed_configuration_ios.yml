@@ -2,6 +2,9 @@
 #
 # file: set_managed_configuration_ios.yml
 #
+# Optimized version using jinja2 filters
+#
+#
 - hosts: switches
   become: false
   gather_facts: false

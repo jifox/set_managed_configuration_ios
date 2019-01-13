@@ -1,0 +1,251 @@
+---
+#
+# file: set_managed_configuration.yml
+#
+# Initial Version: have Performance problems. 
+#                  Use set_managed_configuration_ios.yml instead
+#
+#
+- hosts: switches
+  become: false
+  gather_facts: false
+
+  vars:
+    # Device's running-configuration backup-file. If empty the
+    # running-config from the device will be read
+    src_config_filename: ""
+
+    # Assembled new device-configuration
+    managed_config_dest: "{{ config_dir }}/{{ inventory_hostname }}_managed_configuration.{{ ansible_network_os }}"
+
+    # Remaining unmanaged-configuration
+    unmanaged_config_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_0001_unmanaged_configuration.{{ ansible_network_os }}"
+
+    # Regex to remove managed configuration sections from current switch configuration
+    delete_section_regex:
+      - ^Building\s+configuration.*$$
+      - ^Current\s+configuration.*$$
+      - ^Load\s+for\s+five\s+secs.*$$
+      - ^Time\s+source\s+is\s+NTP.*$$
+      - ^vlan\s+\d*$$
+      - ^ip\s+access-list\s+standard\s+emergency-access$$
+      - ^device-tracking\s+policy\s+DT_TRUNK$$
+      - "^end$$"
+      # - ^interface\s+Vlan\d*$$
+      # - ^spanning-tree\s+.*$$
+      # - ^snmp-server\s+.*$$
+      # - ^radius-server\s+.*$$
+      # - ^radius\s+server\s+.*$$
+      # - ^clock\s+.*$$
+      # - ^crypto\s+.*$$
+
+  tasks:
+
+    #######################################################################
+    # Initialize environment
+    #######################################################################
+
+    - name: "Read all configuration definitions"
+      include_vars:
+        dir: "{{ vars_dir }}/{{ switch_location_group }}"
+      check_mode: false
+      delegate_to: localhost
+
+    - name: Ensure directories exists
+      include_tasks: "{{ include_dir }}/inc_validate_directories.yml"
+      check_mode: false
+      delegate_to: localhost
+
+    - name: Read the switch's serial numbers for banner motd
+      ios_facts:
+      register: facts
+      check_mode: no
+
+    - name: Read configuration from switch
+      block:
+        - napalm_get_facts:
+            hostname: "{{ ansible_host  }}"
+            username: "{{ ansible_user }}"
+            dev_os: "{{ ansible_network_os }}"
+            password: "{{ ansible_ssh_pass }}"
+            timeout: 120
+            filter:
+              - "config"
+        - set_fact:
+            src_config: "{{ napalm_config.running }}"
+      when:
+        - src_config_filename == ""
+
+    - name: Check that archive is enabled (required for napalm_install_config)
+      ios_command:
+        commands:
+          - "show archive"
+      register: show_archive_result
+      changed_when: false
+      check_mode: false
+    - assert:
+        msg:
+        that:
+          - show_archive_result.stdout[0].find("not enabled") == -1
+
+    - name: Lookup configuration from file is src_config_filename is scecified
+      set_fact:
+        src_config: "{{ lookup('file', src_config_filename) }}"
+      delegate_to: localhost
+      when:
+        - src_config_filename != ""
+
+    - set_fact:
+        textfsm_show_run_interfaces_part: "{{ src_config | parse_cli_textfsm(textfsm_template_dir ~ '/cisco_ios_show_run_interface_part.template') }}"
+        managed_client_ports_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_managed_client_ports.yml"
+      delegate_to: localhost
+
+    - name: Generate managed client port list
+      include_tasks: "{{ include_dir }}/inc_template.yml"
+      vars:
+        template_name: "gen_managed_client_interface_list.j2"
+        template_dest: "{{ managed_client_ports_dest }}"
+      delegate_to: localhost
+
+    - name: Import generated list
+      include_vars: "{{ managed_client_ports_dest }}"
+      delegate_to: localhost
+
+
+    #######################################################################
+    # Remove managed configuration sections from file
+    #######################################################################
+
+    - name: Remove all blocks or commands defined in delete_section_regex
+      # The included task will re-read the var src_config from generated configuration
+      include_tasks: "{{ include_dir }}/inc_gen_unmanaged_configuration.yml"
+      vars:
+        template_dest: "{{ unmanaged_config_dest }}"
+        del_section_regex: "{{ item }}"
+      delegate_to: localhost
+      loop: "{{ delete_section_regex }}"
+
+    - name: Remove all managed Client Ports
+      include_tasks: "{{ include_dir }}/inc_gen_unmanaged_configuration.yml"
+      vars:
+        template_dest: "{{ unmanaged_config_dest }}"
+        del_section_regex: "^interface\\s+{{ managed_interface }}$$"
+      delegate_to: localhost
+      loop: "{{ managed_client_ports }}"
+      loop_control:
+        loop_var: managed_interface
+
+
+    - name: Extract all IOS-Banners and replace "^C" with chr(0x03)
+      include_tasks: "{{ include_dir }}/inc_config_section_ios_banner_handler.yml"
+      vars:
+        dest_filename_part: "{{ 9000 + my_index|int }}_banner_{{ item }}"
+        template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
+        banner_name: "{{ item }}"
+        remove_only: "{{ true if item in ['motd'] else false }}"
+      loop:
+        - motd
+        - login
+        - exec
+        - incoming
+        - slip-ppp
+      loop_control:
+        index_var: my_index
+      delegate_to: localhost
+
+
+    #######################################################################
+    # Generate managed configuration parts from datamodel
+    #######################################################################
+
+    - name: Generate VLAN Device-VLAN configuration
+      include_tasks: "{{ include_dir }}/inc_template.yml"
+      vars:
+        dest_filename_part: "0010_vlan_configuration"
+        template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
+        template_name: "config_vlans.j2"
+      delegate_to: localhost
+
+    - name: Generate Device Tracking Policy
+      include_tasks: "{{ include_dir }}/inc_template.yml"
+      vars:
+        dest_filename_part: "0050_config_device_tracking_policy"
+        template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
+        template_name: "config_device_tracking_policy.j2"
+      delegate_to: localhost
+
+    - name: Generate Emergency Access List
+      include_tasks: "{{ include_dir }}/inc_template.yml"
+      vars:
+        dest_filename_part: "0100_acl_emergency_access_configuration"
+        template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
+        template_name: "config_acl_emergency_access.j2"
+      delegate_to: localhost
+
+    - name: Generate Client Ports Configuration
+      include_tasks: "{{ include_dir }}/inc_template.yml"
+      vars:
+        dest_filename_part: "0800_client_ports_configuration"
+        template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
+        template_name: "config_client_interfaces.j2"
+      delegate_to: localhost
+
+    - name: Generate banner motd
+      include_tasks: "{{ include_dir }}/inc_template.yml"
+      vars:
+        display_core: "{{ '( --- CORE-SWITCH --- )' if is_default_gateway is defined and is_default_gateway == true else '' }}"
+        dest_filename_part: "9010_banner_motd_configuration"
+        template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
+        template_name: "config_ios_banner_motd.j2"
+      delegate_to: localhost
+
+    - name: Write end marker
+      copy:
+        content: "end"
+        dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_9999_end.{{ ansible_network_os }}"
+      delegate_to: localhost
+
+
+    #######################################################################
+    # Assemble all files and output desired running configuration
+    #######################################################################
+
+    - name: Assemble configuration
+      assemble:
+        src: "{{ host_tmpdir }}"
+        dest: "{{ managed_config_dest }}"
+        regexp: "^.*\\.{{ ansible_network_os }}$$"
+      delegate_to: localhost
+
+
+    #######################################################################
+    # Write new configuration to device (do_commit is defined) else
+    # show diff between running and desired cs_configuration
+    #######################################################################
+
+    - name: Set Configuration - Check-Mode if do_commit is not defined
+      napalm_install_config:
+        config_file: "{{ managed_config_dest }}"
+        commit_changes: "{{ do_commit is defined}}"
+        replace_config: true
+        get_diffs: true
+        diff_file: "{{ managed_config_dest }}.diff"
+        hostname: "{{ ansible_host  }}"
+        username: "{{ ansible_user }}"
+        dev_os: "{{ ansible_network_os }}"
+        password: "{{ ansible_ssh_pass }}"
+        timeout: 120
+      register: result
+      tags: [print_action]
+
+
+    - name: Display Commit Message
+      debug:
+        msg: |
+            Generated: {{ managed_config_dest }}
+            To apply the changes to the device use commandline parameter -e do_commit=1
+      when:
+        - do_commit is not defined
+      run_once: true
+      delegate_to: localhost
+      tags: [print_action]

@@ -7,12 +7,10 @@
 all:
   vars:
     is_develop: true
-  children:
 
-    # All switches
+  children:
     switches:
       # All switches
-
       children:
         ios:
           # All IOS Switches (valid modules: ios_config, ios_facts, ios_vlan, ios_l2_interface)

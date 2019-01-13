@@ -2,8 +2,26 @@
 #
 # file: inc_set_managed_configuration_ios.yml
 #
+# Include used by Playbooks:
+#  * set_managed_configuration_ios.yml (Generate and push Config to Cisco IOS device)
+#  * compliance/checks/check_managed_config/run_check.yml (report configuration differences)
+#
+# Parameters
+# ==========
+#
+# do_commit: multiple
+#
+#   if do_commit is defined, config changes will be commited,
+#   else only configuration differnces are printed out.
+#
+# is_report_active: multiple
+#
+#   if is_report_active is defined Commit configuration change is disabled.
+#   So even when do_commit is defined a rollback will be performed
+#
 # Returns
 # =======
+#
 # is_config_compliant: bool
 #
 - name: Initialize Data
@@ -44,13 +62,13 @@
 # Initialize environment
 #######################################################################
 
-- debug:
+- name: Display Fabric Data location for device
+  debug:
     msg: "vars_dir: {{ vars_dir }}/{{ switch_location_group }}"
   delegate_to: localhost
   tags: [print_action]
 
-
-- name: "Read all configuration definitions"
+- name: Read all configuration definitions
   include_vars:
     dir: "{{ vars_dir }}/{{ switch_location_group }}"
   check_mode: false
@@ -109,7 +127,7 @@
     template_dest: "{{ managed_client_ports_dest }}"
   delegate_to: localhost
 
-- name: Import generated list
+- name: Import generated managed_client_ports list
   include_vars: "{{ managed_client_ports_dest }}"
   delegate_to: localhost
 
@@ -126,15 +144,14 @@
         regex: ^banner\s+motd\s+\^C$$
         fname: "{{ host_tmpdir }}/{{ inventory_hostname }}_9000_banner_motd.{{ ansible_network_os }}"
       when:
-        - inventory_hostname in ["ATBRACSC001", "ATKPACSC001"]
+        - config_group in ["C6800"]  # VSS Stack will just return one serial no (manually configured)
     - set_fact:
         banner_motd: "{{ src_config | ios_config_section_extract(regex, false, '', fname) }}"
       vars:
         regex: ^banner\s+motd\s+\^C$$
-        fname: ''  # do not save managed configuration
+        fname: ''  # do not save managed banner configuration
       when:
-        - inventory_hostname != "ATBRACSC001"
-        - inventory_hostname != "ATKPACSC001"
+        - not (config_group in ["C6800"])
     - set_fact:
         banner_login: "{{ src_config | ios_config_section_extract(regex, false, '', fname) }}"
       vars:
@@ -178,7 +195,7 @@
 #   delegate_to: localhost
 #   tags: [print_action]
 
-- name: Remove all managed Client Ports
+- name: Remove all managed Client Ports # Leave at last position (unmanged config is saved here!)
   set_fact:
     src_config: "{{ src_config | ios_config_section_remove(managed_client_ports, false, 'interface\\s+', unmanaged_config_dest) }}"
 
@@ -192,11 +209,12 @@
 # Save content of src_config as string
 #######################################################################
 
-- name: Save unmanaged configuration
-  copy:
-    content: "{{ src_config | join('\n') }}"
-    dest: "{{ unmanaged_config_dest }}"
-  delegate_to: localhost
+# not needed anymore - File will be saved in step 'Remove all managed Client Ports'
+# - name: Save unmanaged configuration
+#   copy:
+#     content: "{{ src_config | join('\n') }}"
+#     dest: "{{ unmanaged_config_dest }}"
+#   delegate_to: localhost
 
 #######################################################################
 # Generate managed configuration parts from datamodel
@@ -234,12 +252,11 @@
     template_dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_{{dest_filename_part}}.{{ ansible_network_os }}"
     template_name: "config_ios_banner_motd.j2"
   when:
-    - inventory_hostname != "ATBRACSC001"
-    - inventory_hostname != "ATKPACSC001"
+    - not (config_group in ["C6800"])
   delegate_to: localhost
 
 
-- name: Write end marker
+- name: Write end marker # A valid configuration must contain 'end' as last line
   copy:
     content: "end"
     dest: "{{ host_tmpdir }}/{{ inventory_hostname }}_9999_end.{{ ansible_network_os }}"

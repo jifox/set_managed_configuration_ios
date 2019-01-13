@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright: (c) 2019, Josef Fuchs <josef.fuchs@j-fuchs.at>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import re
 import copy
@@ -19,7 +21,7 @@ class IosConfigRegexp:
     Attributes
     ----------
 
-    conf_lines: list
+    conf_lines: list, str
         contains the ios-configuration.
     ignorecase: bool
         set to True to perform case insensitive regexp searches
@@ -123,7 +125,7 @@ class IosConfigRegexp:
                 return True
         return False
 
-    def is_banner(self, idx):
+    def is_banner(self, idx) -> bool:
         ''' Checks if conf_line[idx] is a banner header '''
         return (self.conf_lines[idx].lower().find('banner ') != -1
                 and (self.conf_lines[idx][-2:] == '^C' or self.conf_lines[idx][-1:] == "\x03"))
