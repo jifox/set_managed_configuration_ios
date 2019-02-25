@@ -24,7 +24,7 @@ interface GigabitEthernet1/0/2
 
 The rest of this page describes YAML configuration, Ansible playbook, and Jinja2 template I used to remove configuration section from Cisco IOS device configuration with regex matches (the full source of the playbook can be found on github).
 
-The playbook uses the following variables to describes the configuration sections that have to be removed. You could place the variables at the top of the play (under **vars**), or include them with **include_vars**.
+The playbook uses the following variables to describe the configuration sections that have to be removed. You could place the variables at the top of the play (under **vars**), or include them with **include_vars**.
 
 ```yaml
   ...
