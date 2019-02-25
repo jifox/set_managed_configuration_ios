@@ -232,7 +232,7 @@ I also created a similar template that extracts a configuration section. You can
 {% endfor %}
 ```
 
-##Banner Templates
+## Banner Templates
 
 While you can use any character as a delimiter when configuring a banner, Cisco IOS returns the banners with EXT character (ASCII 3) as the separator. EXT character is displayed as ^C in the configuration file, but has to be a single character (ASCII 3) if you want to replace device configuration _(Barroso 2016, <https://napalm.readthedocs.io/en/latest/support/ios.html>)_.
 
