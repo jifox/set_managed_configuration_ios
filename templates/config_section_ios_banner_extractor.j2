@@ -1,0 +1,18 @@
+{% set ns = namespace(is_in_block = false) %}
+{% set ns.searchfor = '^banner\s+' ~ banner_name ~ '\s+\^C$$' %}
+{% set ns.is_first = true %}
+{% for line in src_config.split('\n') %}
+{%   set found=line | regex_search( ns.searchfor ) %}
+{%   if found and ns.is_first %}
+{%     set ns.is_in_block = true %}
+{%     set ns.is_first = false %}
+banner {{ banner_name ~ " \x03" }}
+{%   elif ns.is_in_block %}
+{%     if line.find('^C') != -1 %}
+{%       set ns.is_in_block = false %}
+{{       "\x03" }}
+{%     else %}
+{{       line }}
+{%     endif %}
+{%   endif %}
+{% endfor %}

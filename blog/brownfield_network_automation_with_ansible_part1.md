@@ -1,6 +1,6 @@
 # Brownfield Network Automation with Ansible
 
-This article describes a solution _Josef Fuchs_, Network and Security Engineer at _Pankl Racing Systems AG Austria_ developed while attending the _Building Network Automation Solutions_ online course.
+_This article describes a solution **Josef Fuchs**, Network and Security Engineer at **Pankl Racing Systems AG Austria** developed while attending the Building **Network Automation Solutions** online course._
 
 One of the problems that I ran into when starting with network automation was the decision on how to migrate to network device configurations from manually-configured ones to fully managed configurations.
 

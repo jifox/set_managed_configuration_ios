@@ -1,0 +1,17 @@
+{% set ns = namespace(is_in_block = false) %}
+{% for line in src_config.split('\n') %}
+{%   if ns.is_in_block %}
+{%     if (line ~ 'x')[0] != ' '%}
+{%       if line != '!' %}
+{%         set ns.is_in_block = false %}
+{%       endif %}
+{%     endif %}
+{%   endif %}
+{%   set found=line | regex_search(del_section_regex) %}
+{%   if found %}
+{%     set ns.is_in_block = true %}
+{%   endif %}
+{%   if not ns.is_in_block %}
+{{ line }}
+{%   endif %}
+{% endfor %}
